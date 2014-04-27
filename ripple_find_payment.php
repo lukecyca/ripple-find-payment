@@ -94,13 +94,14 @@ function _ripple_check_tx($tx, $src_address, $dst_address, $value, $currency) {
 function ripple_find_payment($src_address, $dst_address, $value, $currency) {
     global $RIPPLE_RPC_SERVERS, $RIPPLE_MAX_FAILED_REQUESTS, $RIPPLE_MAX_LEDGER_HISTORY;
 
+    $resp = null;
     $server_index = 0;
     $marker = null;
     $failures = 0;
     while ((!$resp or $marker)) {
         $resp = _ripple_request_account_tx($RIPPLE_RPC_SERVERS[$server_index], $dst_address, $resp["result"]["marker"]);
         if ($resp and $resp["result"]["status"] === "success") {
-            $marker = $resp["result"]["marker"];
+            $marker = isset($resp["result"]["marker"]) ? $resp["result"]["marker"] : null;
             foreach ($resp["result"]["transactions"] as $tx) {
                 if (_ripple_check_tx($tx, $src_address, $dst_address, $value, $currency)) {
                     return $tx["tx"];
@@ -108,7 +109,7 @@ function ripple_find_payment($src_address, $dst_address, $value, $currency) {
 
                 // If we haven't found a matching transaction in the last $RIPPLE_MAX_LEDGER_HISTORY
                 // ledgers, give up.
-                if ($tx["ledger_index"] < $resp["result"]["ledger_index_max"] - $RIPPLE_MAX_LEDGER_HISTORY) {
+                if ($tx["tx"]["ledger_index"] < $resp["result"]["ledger_index_max"] - $RIPPLE_MAX_LEDGER_HISTORY) {
                     return false;
                 }
             }
