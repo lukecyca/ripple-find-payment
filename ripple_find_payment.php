@@ -30,7 +30,6 @@ function _ripple_request_account_tx($server, $account, $marker = false) {
     $c = curl_init();
     curl_setopt($c, CURLOPT_URL, $server);
     curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($c, CURLOPT_FAILONERROR, true);
     curl_setopt($c, CURLOPT_POST, true);
     curl_setopt($c, CURLOPT_POSTFIELDS, json_encode(array(
         "method" => "account_tx",
@@ -47,11 +46,17 @@ function _ripple_request_account_tx($server, $account, $marker = false) {
         "Accept: application/json"
     ));
     $response = curl_exec($c);
-
-    if ($response === false) {
+    $ret_code = curl_getinfo($c, CURLINFO_HTTP_CODE);
+    
+    if (curl_errno($c)) {
         print("CURL ERROR: " . curl_error($c) . "\n");
         return false;
     }
+    if ($ret_code !== 200) {
+        print("HTTP " . $ret_code . ": " . trim($response) . "\n");
+        return false;
+    }
+    
     curl_close($c);
 
     return json_decode($response, true);
