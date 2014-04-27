@@ -70,10 +70,10 @@ function _ripple_check_tx($tx, $src_address, $dst_address, $value, $currency) {
         $tx["tx"]["Destination"] === $dst_address and
 
         // Currency is XRP and matches (in drips)
-        ($currency !== "XRP" or $tx["tx"]["Amount"] == $value * 1000000) and
+        (!is_numeric($tx["tx"]["Amount"]) or $tx["tx"]["Amount"] == $value * 1000000) and
 
         // Currency is an IOU and matches
-        ($currency === "XRP" or (
+        (is_numeric($tx["tx"]["Amount"]) or (
             $tx["tx"]["Amount"]["value"] == $value and
             $tx["tx"]["Amount"]["currency"] == $currency
         ))
